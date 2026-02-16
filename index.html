@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google-Style Logo Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500&display=swap" rel="stylesheet">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --g-blue: #4285F4;
+            --g-red: #EA4335;
+            --g-yellow: #FBBC05;
+            --g-green: #34A853;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- Steuerungs-Panel Styles --- */
+        .controls-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        label { font-weight: 600; font-size: 0.9rem; color: #555; }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input[type="color"] {
+            height: 40px;
+            width: 60px;
+            padding: 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 40px;
+            padding-top: 22px; /* Alignment fix */
+        }
+
+        button#downloadBtn {
+            background-color: var(--g-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: auto;
+            height: fit-content;
+            align-self: flex-end;
+        }
+        
+        button#downloadBtn:hover { background-color: #3367d6; }
+
+
+        /* --- Logo Container Styles --- */
+        /* Dies ist der Bereich, der als Bild gespeichert wird */
+        #logoCaptureArea {
+            text-align: center;
+            /* Standard Hintergrund */
+            background-color: #ffffff; 
+            padding: 60px 80px;
+            border-radius: 24px;
+            /* Wichtig: Schatten wird im Screenshot entfernt, damit es sauber ist */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: inline-block; /* Passt sich dem Inhalt an */
+        }
+
+        .g-icon {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .custom-text-output {
+            font-size: 60px;
+            font-weight: 500;
+            letter-spacing: -1.5px;
+            line-height: 1.2;
+            white-space: nowrap; /* Verhindert Umbruch */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls-panel">
+        <div class="input-group">
+            <label for="textInput">Dein Text:</label>
+            <input type="text" id="textInput" value="MeinLogo" placeholder="Text eingeben...">
+        </div>
+
+        <div class="input-group">
+            <label for="bgColorInput">Hintergrundfarbe:</label>
+            <input type="color" id="bgColorInput" value="#ffffff">
+        </div>
+
+        <div class="checkbox-group">
+             <input type="checkbox" id="transparentCb">
+             <label for="transparentCb" style="cursor:pointer; padding-top:0;">Transparent?</label>
+        </div>
+
+        <button id="downloadBtn">Als PNG herunterladen</button>
+    </div>
+
+
+    <div id="logoCaptureArea">
+        <svg class="g-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M95 50c0-3.1-.3-6.1-.8-9.1H50v17.2h25.4c-1.1 5.9-4.5 10.9-9.5 14.3v11.9h15.4C90.3 75.7 95 64.1 95 50z" fill="#4285F4"/>
+            <path d="M50 96c12.4 0 22.8-4.1 30.4-11.1L65 73c-4.2 2.8-9.6 4.5-15 4.5-11.5 0-21.3-7.8-24.8-18.3H9.3v12.3C16.9 86.6 32.4 96 50 96z" fill="#34A853"/>
+            <path d="M25.2 59.2c-1.8-5.4-1.8-11.2 0-16.6V30.3H9.3c-6 12-6 26.1 0 38.1l15.9-9.2z" fill="#FBBC05"/>
+            <path d="M50 22.5c6.7 0 12.7 2.3 17.5 6.9l13.1-13.1C72.3 8.3 62 3.4 50 3.4 32.4 3.4 16.9 12.8 9.3 27.8l15.9 12.3c3.5-10.4 13.3-17.6 24.8-17.6z" fill="#EA4335"/>
+        </svg>
+
+        <div class="custom-text-output" id="textOutput"></div>
+    </div>
+
+
+<script>
+    // --- Konfiguration ---
+    // Die klassische Google-Farbsequenz: Blau, Rot, Gelb, Blau, Grün, Rot
+    const googleColors = ['#4285F4', '#EA4335', '#FBBC05', '#4285F4', '#34A853', '#EA4335'];
+
+    // --- DOM Elemente holen ---
+    const textInput = document.getElementById('textInput');
+    const textOutput = document.getElementById('textOutput');
+    const bgColorInput = document.getElementById('bgColorInput');
+    const transparentCb = document.getElementById('transparentCb');
+    const captureArea = document.getElementById('logoCaptureArea');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // --- Funktion 1: Text aktualisieren und färben ---
+    function updateText() {
+        const text = textInput.value || "Google"; // Fallback falls leer
+        textOutput.innerHTML = ''; // Vorherigen Inhalt löschen
+
+        // Text in Buchstaben aufteilen und einzeln färben
+        text.split('').forEach((char, index) => {
+            let span = document.createElement('span');
+            span.innerText = char;
+            // Modulo-Operator (%) sorgt dafür, dass die Farben immer wieder von vorne beginnen
+            span.style.color = googleColors[index % googleColors.length];
+            textOutput.appendChild(span);
+        });
+    }
+
+    // --- Funktion 2: Hintergrund aktualisieren ---
+    function updateBackground() {
+        if (transparentCb.checked) {
+            captureArea.style.backgroundColor = 'transparent';
+            // Wenn transparent, deaktivieren wir den Farbwähler visuell
+            bgColorInput.style.opacity = '0.5';
+            bgColorInput.disabled = true;
+        } else {
+            captureArea.style.backgroundColor = bgColorInput.value;
+             // Farbwähler wieder aktivieren
+             bgColorInput.style.opacity = '1';
+             bgColorInput.disabled = false;
+        }
+    }
+
+    // --- Event Listener hinzufügen (Reaktion auf Eingaben) ---
+    textInput.addEventListener('input', updateText);
+    bgColorInput.addEventListener('input', updateBackground);
+    transparentCb.addEventListener('change', updateBackground);
+
+    // --- Initiale Ausführung beim Laden der Seite ---
+    updateText();
+    updateBackground();
+
+
+    // --- Funktion 3: Herunterladen (html2canvas) ---
+    downloadBtn.addEventList2ener('click', () => {
+        // Temporär den Schatten entfernen für einen sauberen Schnitt
+        const originalShadow = captureArea.style.boxShadow;
+        captureArea.style.boxShadow = 'none';
+
+        // html2canvas Konfiguration
+        html2canvas(captureArea, {
+            scale: 3, // Höhere Auflösung (3x) für scharfe Ergebnisse
+            backgroundColor: transparentCb.checked ? null : bgColorInput.value, // WICHTIG für Transparenz
+            logging: false, // Debugging ausschalten
+            useCORS: true // Hilft manchmal bei externen Ressourcen
+        }).then(canvas => {
+             // Schatten wiederherstellen
+             captureArea.style.boxShadow = originalShadow;
+
+            // Canvas in ein Bild umwandeln und Download triggern
+            const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            const link = document.createElement('a');
+            // Dateiname generieren basierend auf dem Text
+            let fileName = (textInput.value || 'google-logo').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            link.download = `${fileName}.png`;
+            link.href = image;
+            link.click();
+        });
+    });
+
+</script>
+
+</body>
+</html>
